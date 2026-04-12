@@ -21,36 +21,36 @@ FIELDNAMES = [
 
 
 def extract_row(r: dict) -> dict:
-    v = r.get("resultatregnskapResultat", {})
-    b = r.get("balanseregnskapSummarisert", {})
-    ei = b.get("sumEiendeler", {})
-    ek = b.get("egenkapitalGjeld", {})
+    v  = r.get("resultatregnskapResultat", {})
+    ei = r.get("eiendeler", {})
+    ek = r.get("egenkapitalGjeld", {})
+    gj = ek.get("gjeldOversikt", {})
 
-    def val(d, *keys):
+    def g(d, *keys):
         for k in keys:
-            if d is None:
+            if not isinstance(d, dict):
                 return ""
-            d = d.get(k, {}) if isinstance(d, dict) else {}
-        return d if not isinstance(d, dict) else d.get("value", "")
+            d = d.get(k, {})
+        return d if not isinstance(d, dict) else ""
 
     return {
         "organisasjonsnummer": r.get("virksomhet", {}).get("organisasjonsnummer", ""),
         "navn":                r.get("virksomhet", {}).get("navn", ""),
         "regnskapsaar":        r.get("regnskapsperiode", {}).get("fraDato", "")[:4],
-        "sum_driftsinntekter": val(v, "driftsresultat", "driftsinntekter", "sumDriftsinntekter"),
-        "sum_driftskostnad":   val(v, "driftsresultat", "driftskostnader", "sumDriftskostnader"),
-        "driftsresultat":      val(v, "driftsresultat", "driftsresultat"),
-        "sum_finansinntekter": val(v, "finansresultat", "finansinntekter", "sumFinansinntekter"),
-        "sum_finanskostnad":   val(v, "finansresultat", "finanskostnader", "sumFinanskostnader"),
-        "ordinaert_resultat_foer_skatt": val(v, "ordinaertResultatFoerSkattekostnad"),
-        "aarsresultat":        val(v, "aarsresultat"),
-        "sum_eiendeler":       val(ei, "sumEiendeler"),
-        "sum_anleggsmidler":   val(ei, "anleggsmidler", "sumAnleggsmidler"),
-        "sum_omloepsmidler":   val(ei, "omloepsmidler", "sumOmloepsmidler"),
-        "sum_egenkapital":     val(ek, "egenkapital", "sumEgenkapital"),
-        "sum_gjeld":           val(ek, "gjeldOgEgenkapital", "sumGjeld"),
-        "sum_kortsiktig_gjeld": val(ek, "gjeld", "kortsiktigGjeld", "sumKortsiktigGjeld"),
-        "sum_langsiktig_gjeld": val(ek, "gjeld", "langsiktigGjeld", "sumLangsiktigGjeld"),
+        "sum_driftsinntekter": g(v, "driftsresultat", "driftsinntekter", "sumDriftsinntekter"),
+        "sum_driftskostnad":   g(v, "driftsresultat", "driftskostnad", "sumDriftskostnad"),
+        "driftsresultat":      g(v, "driftsresultat", "driftsresultat"),
+        "sum_finansinntekter": g(v, "finansresultat", "finansinntekt", "sumFinansinntekter"),
+        "sum_finanskostnad":   g(v, "finansresultat", "finanskostnad", "sumFinanskostnad"),
+        "ordinaert_resultat_foer_skatt": g(v, "ordinaertResultatFoerSkattekostnad"),
+        "aarsresultat":        g(v, "aarsresultat"),
+        "sum_eiendeler":       g(ei, "sumEiendeler"),
+        "sum_anleggsmidler":   g(ei, "anleggsmidler", "sumAnleggsmidler"),
+        "sum_omloepsmidler":   g(ei, "omloepsmidler", "sumOmloepsmidler"),
+        "sum_egenkapital":     g(ek, "egenkapital", "sumEgenkapital"),
+        "sum_gjeld":           g(gj, "sumGjeld"),
+        "sum_kortsiktig_gjeld": g(gj, "kortsiktigGjeld", "sumKortsiktigGjeld"),
+        "sum_langsiktig_gjeld": g(gj, "langsiktigGjeld", "sumLangsiktigGjeld"),
     }
 
 
